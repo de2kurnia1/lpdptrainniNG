@@ -7,23 +7,22 @@ namespace DatingApp.API.Data
 {
     public class AuthRepository : IAuthRepository
     {
-        private readonly DataContext context; // definisi var
-
-        // constructor ketik : ctor enter 
+        private readonly DataContext _context;
         public AuthRepository(DataContext context)
         {
-            this.context =context;
+            _context = context;
+
         }
         public async Task<User> Login(string username, string password)
         {
-            var user = await this.context.Users.FirstOrDefaultAsync(x => x.Username == username);
-            if(user == null)
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
+            if (user == null)
                 return null;
 
-            if(!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
+            if (!VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt))
                 return null;
 
-            return user;        
+            return user;
         }
 
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
@@ -43,14 +42,14 @@ namespace DatingApp.API.Data
         {
             byte[] passwordHash, passwordSalt;
             CreatePasswordHash(password, out passwordHash, out passwordSalt); // pass by reference
+
             user.PasswordHash = passwordHash;
             user.PasswordSalt = passwordSalt;
 
-            await this.context.Users.AddAsync(user);
-            await this.context.SaveChangesAsync();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
 
             return user;
-
         }
 
         private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
@@ -60,11 +59,12 @@ namespace DatingApp.API.Data
                 passwordSalt = hmac.Key;
                 passwordHash = hmac.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
             }
+
         }
 
         public async Task<bool> UserExists(string username)
         {
-            if (await this.context.Users.AnyAsync(x => x.Username == username))
+            if (await _context.Users.AnyAsync(x => x.Username == username))
                 return true;
 
             return false;
